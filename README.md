@@ -1,33 +1,83 @@
-# IAVE
+Markdown
+# 🌌 Space Ship-Meteors Game (LibGDX)
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+Este é um jogo digital 2D de nave espacial desenvolvido em **Java** utilizando o framework **LibGDX**. O projeto foi construído como parte do currículo acadêmico da **Universidade Presbiteriana Mackenzie**, aplicando conceitos avançados de Programação Orientada a Objetos (POO), gerência de estados, detecção de colisões e integração customizada de periféricos (mecanismo de input baseado em um skate adaptado).
 
-This project was generated with a template including simple application launchers and an empty `ApplicationListener` implementation.
+---
 
-## Platforms
+## 🚀 Funcionalidades do Jogo
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+* **Mecânica Core:** Controle uma nave espacial desviando de meteoros (obstáculos) e coletando itens espaciais para pontuar.
+* **Power-ups:**
+    * ❤️ **Coração/Drop:** Recupera um ponto de vida (máximo de 3).
+    * 🛡️ **Escudo (Shield):** Concede invencibilidade temporária com efeito visual pulsante.
+* **Parallax Scrolling:** Fundo infinito simulando o movimento da nave pelo espaço profundo.
+* **Sistema de Estados (FSM):** Telas de Menu Principal, Gameplay (Fase 1) com sistema de Pausa integrado, e Tela Final (com estatísticas de tempo e pontuação).
+* **Suporte Dual-Input:** Modos de controle intercambiáveis entre teclado convencional e um controle de skate físico customizado.
 
-## Gradle
+---
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+## 🎨 Arquitetura e Engenharia de Software
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+O projeto segue à risca os padrões de desenvolvimento exigidos em Engenharia de Software e POO:
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+* **Polimorfismo e Herança:** Uso da classe abstrata `GameObject` para encapsular o comportamento de renderização, atualização de física e cálculo de caixas de colisão (`Rectangle` bounds) para todos os elementos em tela (`PlayerShip`, `coletaveis`, `Obstaculo`, `PowerUp`, `Shield`).
+* **Inversão de Dependência:** O controle da nave depende da interface `InputProvider`. Isso desacopla a física do jogador da origem física do comando (seja teclado ou controle de skate).
+* **Gerenciamento de Memória:** Implementação rigorosa do método `dispose()` em todas as camadas para evitar *memory leaks* de texturas, fontes e áudios nativos da biblioteca gráfica.
+
+---
+
+## 🕹️ Modos de Controle (Skateboard Input)
+
+O jogo possui uma classe inovadora chamada `SkateboardInput` que permite mapear os movimentos com base em um skate físico adaptado com eixos de controle digitais.
+
+* **`MODO_SIMULACAO = true` (Padrão):** O jogo roda simulando o skate através do teclado tradicional (**A** para Esquerda, **D** para Direita).
+* **`MODO_SIMULACAO = false`:** O framework passa a varrer as portas USB via `Controllers` do LibGDX para detectar o hardware do skate, mapeando a zona morta (`ZONA_MORTA = 0.3f`) e os eixos horizontais nativos.
+* **Modo Debug:** Inclui um registrador (`MODO_DEBUG = true`) em tempo real para capturar os índices exatos de eixos e botões acionados pelo periférico no console.
+
+---
+
+## 📁 Estrutura de Arquivos Principais
+
+```text
+br.mackenzie/
+│
+├── Main.java              # Classe central que estende com.badlogic.gdx.Game (gerencia o ciclo de vida)
+├── Fase1.java             # Coração do gameplay (Mecânica de spawn, colisões, HUD, estados e Pausa)
+├── InputProvider.java     # Interface base de abstração para os comandos de movimentação
+├── GerenciadorInput.java  # Provedor padrão que decide a estratégia ativa de leitura de controles
+└── SkateboardInput.java   # Implementação avançada para suporte a hardware físico de Skate e Teclado (A/D)
+🛠️ Tecnologias Utilizadas
+Linguagem: Java
+
+Framework: LibGDX (v1.12.1 ou superior)
+
+Gerenciador de Dependências: Gradle
+
+Biblioteca de Áudio/Gráficos: APIs nativas do LibGDX (SpriteBatch, FitViewport, Sound, Music)
+
+🎮 Como Jogar (Controles de Teclado)
+Menu e Telas
+ESPAÇO: Inicia o gameplay nas telas de Start ou reinicia nas telas de Game Over / Vitória.
+
+ESC: Pausa o jogo durante a partida ou retorna/sai dependendo do contexto.
+
+Durante o Gameplay
+A / D (ou Setas): Movimentam a nave para a esquerda e para a direita.
+
+ESC: Abre o menu de pausa estilizado em tela.
+
+Use as setas UP / DOWN para navegar entre Continuar, Voltar ao Menu e Sair.
+
+Pressione ENTER ou use o Clique do Mouse diretamente sobre os botões texturizados para selecionar a opção desejada.
+
+⚙️ Pré-requisitos para Execução
+Ter o JDK 11 (ou superior) instalado na máquina.
+
+Certificar-se de ter os seguintes recursos de áudio e imagem na pasta assets do seu projeto Java/Gradle:
+
+Imagens/Texturas: player.png, player_left.png, player_right.png, background_near.png, coletavel1.png, coletavel2.png, coletavel3.png, obstaculo1.png, obstaculo2.png, drop.png, shield.png, start_game.png, game_over.png, heart.png, win.png, pause.png.
+
+Áudios: explosao.mp3 (efeitos), music.mp3 (trilha de fundo).
+
+Fontes: pixel_font.fnt (e seu respectivo arquivo de textura).
