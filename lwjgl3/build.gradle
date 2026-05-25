@@ -18,7 +18,11 @@ apply plugin: 'io.github.fourlastor.construo'
 
 import io.github.fourlastor.construo.Target
 
-sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
+// src/main/resources já é incluído automaticamente pelo Java plugin
+// Só adicionamos 'assets' se a pasta existir, para evitar duplicatas
+if (rootProject.file('assets').exists()) {
+  sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
+}
 mainClassName = 'br.mackenzie.lwjgl3.Lwjgl3Launcher'
 application.setMainClass(mainClassName)
 eclipse.project.name = appName + '-lwjgl3'
@@ -31,6 +35,7 @@ if (JavaVersion.current().isJava9Compatible()) {
 dependencies {
   implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  implementation "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:2.2.3"
   implementation project(':core')
 
   if(enableGraalNative == 'true') {
@@ -42,7 +47,8 @@ dependencies {
 def os = System.properties['os.name'].toLowerCase()
 
 run {
-  workingDir = rootProject.file('assets').path
+  // Usa a pasta resources como diretório de trabalho (onde ficam os assets)
+  workingDir = file('src/main/resources').path
 // You can uncomment the next line if your IDE claims a build failure even when the app closed properly.
   //setIgnoreExitValue(true)
 

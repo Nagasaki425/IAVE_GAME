@@ -1,0 +1,15 @@
+# Build outputs
+build/
+.gradle/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Compiled classes
+*.class
+
+# JARs (exceto o final que queremos versionar)
+!lwjgl3/build/libs/*.jar

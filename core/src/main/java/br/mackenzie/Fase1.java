@@ -54,6 +54,7 @@ public class Fase1 extends ScreenAdapter {
     private Texture pauseTex;
 
     private PlayerShip player;
+    private GerenciadorInput gerenciadorInput;
 
     private Array<coletaveis> coletaveisList;
     private Array<Obstaculo> obstaculos;
@@ -68,8 +69,10 @@ public class Fase1 extends ScreenAdapter {
     private Sound dropSound;
     private Music music;
     private BitmapFont font;
+    private BitmapFont pauseFont;
 
     private int screenW, screenH;
+    private float tempoJogo = 0f;
 
     private int pauseOption = 0; // 0 = Play, 1 = Menu, 2 = Sair
 
@@ -110,18 +113,26 @@ public class Fase1 extends ScreenAdapter {
         winTex       = new Texture("win.png");
         pauseTex     = new Texture("pause.png");
 
-        font = new BitmapFont();
+        font = new BitmapFont(Gdx.files.internal("pixel_font.fnt"));
+        font.getRegion().getTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        pauseFont = new BitmapFont();
+        pauseFont.getData().setScale(3.0f);
+        pauseFont.setColor(Color.WHITE);
+
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
 
         music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
         music.setLooping(true);
         music.play();
 
+        gerenciadorInput = new GerenciadorInput();
+
         initGame();
     }
 
     private void initGame() {
-        player = new PlayerShip(playerTex, playerLeftTex, playerRightTex, 3.5f, 0.2f);
+        player = new PlayerShip(playerTex, playerLeftTex, playerRightTex, 3.5f, 0.2f, gerenciadorInput);
 
         coletaveisList = new Array<>();
         obstaculos = new Array<>();
@@ -132,6 +143,7 @@ public class Fase1 extends ScreenAdapter {
         score = 0;
         lives = MAX_LIVES;
         bgNearY = 0f;
+        tempoJogo = 0f;
         pauseOption = 0;
     }
 
@@ -150,6 +162,8 @@ public class Fase1 extends ScreenAdapter {
                     break;
                 }
 
+                tempoJogo += delta;
+                gerenciadorInput.update(delta);
                 updateParallax(delta);
                 player.update(delta);
                 spawnObjects(delta);
@@ -166,21 +180,19 @@ public class Fase1 extends ScreenAdapter {
 
             case GAME_OVER:
                 if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-                    initGame();
-                    gameState = GameState.WAITING;
+                    irParaTelaFinal();
+                    return;
                 }
                 break;
 
             case WIN:
                 if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-                    Gdx.input.setInputProcessor(null);
-                    jogo.setScreen(new Fase2(jogo));
+                    irParaTelaFinal();
                     return;
                 }
 
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-                    Gdx.input.setInputProcessor(null);
-                    jogo.setScreen(new MenuPrincipal(jogo));
+                    irParaTelaFinal();
                     return;
                 }
                 break;
@@ -406,30 +418,26 @@ public class Fase1 extends ScreenAdapter {
 
         spriteBatch.draw(pauseTex, imgX, imgY, imgW, imgH);
 
-        font.getData().setScale(2.0f);
-        font.setColor(Color.WHITE);
-
         float arrowX = imgX + imgW * 0.10f;
         float arrowY;
 
         if (pauseOption == 0) {
-            arrowY = imgY + imgH * 0.50f;
+            arrowY = imgY + imgH * 0.52f;
         } else if (pauseOption == 1) {
-            arrowY = imgY + imgH * 0.36f;
+            arrowY = imgY + imgH * 0.38f;
         } else {
-            arrowY = imgY + imgH * 0.22f;
+            arrowY = imgY + imgH * 0.24f;
         }
 
-        font.draw(spriteBatch, ">", arrowX, arrowY);
-
-        font.getData().setScale(8.0f);
+        pauseFont.getData().setScale(3.0f);
+        pauseFont.setColor(Color.WHITE);
+        pauseFont.draw(spriteBatch, ">", arrowX, arrowY);
     }
 
     private void drawScore() {
         font.setColor(Color.RED);
-        font.getData().setScale(3.0f);
-        font.draw(spriteBatch, "Fase 1 - Score: " + score, 20, screenH - 20);
         font.getData().setScale(1.0f);
+        font.draw(spriteBatch, "Fase 1 - Score: " + score, 20, screenH - 20);
     }
 
     private void drawLiveHearts() {
@@ -580,6 +588,12 @@ public class Fase1 extends ScreenAdapter {
         hudCamera.setToOrtho(false, width, height);
     }
 
+    private void irParaTelaFinal() {
+        if (music != null) music.stop();
+        Gdx.input.setInputProcessor(null);
+        jogo.setScreen(new TelaFinal(jogo, score, SCORE_VITORIA, tempoJogo));
+    }
+
     @Override
     public void dispose() {
         if (spriteBatch != null) spriteBatch.dispose();
@@ -609,12 +623,10 @@ public class Fase1 extends ScreenAdapter {
         if (dropSound != null) dropSound.dispose();
         if (music != null) music.dispose();
         if (font != null) font.dispose();
+        if (pauseFont != null) pauseFont.dispose();
+        if (gerenciadorInput != null) gerenciadorInput.dispose();
     }
 }
-
-// ========================================================
-// CLASSES BASE E ENTIDADES
-// ========================================================
 
 abstract class GameObject {
     protected Sprite sprite;
@@ -646,6 +658,8 @@ class PlayerShip extends GameObject {
     private final Texture texLeft;
     private final Texture texRight;
 
+    private final InputProvider input;
+
     private float invincibleTimer = 0f;
     private float shieldTimer = 0f;
 
@@ -655,12 +669,13 @@ class PlayerShip extends GameObject {
     private static final float PLAYER_WIDTH = 0.8f;
     private static final float PLAYER_HEIGHT = 0.8f;
 
-    public PlayerShip(Texture idle, Texture left, Texture right, float x, float y) {
+    public PlayerShip(Texture idle, Texture left, Texture right, float x, float y, InputProvider input) {
         super(idle, x, y, PLAYER_WIDTH, PLAYER_HEIGHT);
 
         this.texIdle = idle;
         this.texLeft = left;
         this.texRight = right;
+        this.input = input;
     }
 
     @Override
@@ -670,10 +685,10 @@ class PlayerShip extends GameObject {
 
         Texture currentTexture = texIdle;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+        if (input.isMovingRight()) {
             sprite.translateX(speed * delta);
             currentTexture = texRight;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+        } else if (input.isMovingLeft()) {
             sprite.translateX(-speed * delta);
             currentTexture = texLeft;
         }

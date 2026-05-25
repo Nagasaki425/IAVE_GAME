@@ -2,7 +2,6 @@ package br.mackenzie;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -54,6 +53,7 @@ public class Fase2 extends ScreenAdapter {
     private Texture pauseTex;
 
     private PlayerShip player;
+    private GerenciadorInput gerenciadorInput;
 
     private Array<coletaveis> coletaveisList;
     private Array<Obstaculo> obstaculos;
@@ -71,6 +71,7 @@ public class Fase2 extends ScreenAdapter {
     private BitmapFont pauseFont;
 
     private int screenW, screenH;
+    private float tempoJogo = 0f;
     private int pauseOption = 0; // 0 = Play, 1 = Menu, 2 = Sair
 
     public Fase2(Main jogo) {
@@ -125,11 +126,13 @@ public class Fase2 extends ScreenAdapter {
         music.setLooping(true);
         music.play();
 
+        gerenciadorInput = new GerenciadorInput();
+
         initGame();
     }
 
     private void initGame() {
-        player = new PlayerShip(playerTex, playerLeftTex, playerRightTex, 3.5f, 0.2f);
+        player = new PlayerShip(playerTex, playerLeftTex, playerRightTex, 3.5f, 0.2f, gerenciadorInput);
 
         coletaveisList = new Array<>();
         obstaculos = new Array<>();
@@ -140,6 +143,7 @@ public class Fase2 extends ScreenAdapter {
         score = 0;
         lives = MAX_LIVES;
         bgNearY = 0f;
+        tempoJogo = 0f;
         pauseOption = 0;
     }
 
@@ -158,6 +162,8 @@ public class Fase2 extends ScreenAdapter {
                     break;
                 }
 
+                tempoJogo += delta;
+                gerenciadorInput.update(delta);
                 updateParallax(delta);
                 player.update(delta);
                 spawnObjects(delta);
@@ -174,19 +180,19 @@ public class Fase2 extends ScreenAdapter {
 
             case GAME_OVER:
                 if (pressedAny(Input.Keys.SPACE, Input.Keys.ENTER, Input.Keys.NUMPAD_ENTER)) {
-                    initGame();
-                    gameState = GameState.WAITING;
+                    irParaTelaFinal();
+                    return;
                 }
                 break;
 
             case WIN:
                 if (pressedAny(Input.Keys.SPACE, Input.Keys.ENTER, Input.Keys.NUMPAD_ENTER)) {
-                    trocarTela(new Fase3(jogo));
+                    irParaTelaFinal();
                     return;
                 }
 
                 if (pressedAny(Input.Keys.ESCAPE)) {
-                    voltarParaMenu();
+                    irParaTelaFinal();
                     return;
                 }
                 break;
@@ -360,7 +366,9 @@ public class Fase2 extends ScreenAdapter {
                 break;
 
             case 1:
-                trocarTela(new MenuPrincipal(jogo));
+                if (music != null) music.stop();
+                Gdx.input.setInputProcessor(null);
+                jogo.setScreen(new MenuPrincipal(jogo));
                 break;
 
             case 2:
@@ -368,19 +376,10 @@ public class Fase2 extends ScreenAdapter {
                 break;
         }
     }
-    private void voltarParaMenu() {
-        if (music != null) {
-            music.stop();
-        }
-
+    private void irParaTelaFinal() {
+        if (music != null) music.stop();
         Gdx.input.setInputProcessor(null);
-
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run() {
-                jogo.setScreen(new MenuPrincipal(jogo));
-            }
-        });
+        jogo.setScreen(new TelaFinal(jogo, score, SCORE_VITORIA, tempoJogo));
     }
 
     private void updateParallax(float delta) {
@@ -462,9 +461,8 @@ public class Fase2 extends ScreenAdapter {
 
     private void drawScore() {
         font.setColor(Color.RED);
-        font.getData().setScale(3.0f);
-        font.draw(spriteBatch, "Fase 2 - Score: " + score, 20, screenH - 20);
         font.getData().setScale(1.0f);
+        font.draw(spriteBatch, "Fase 2 - Score: " + score, 20, screenH - 20);
     }
 
     private void drawLiveHearts() {
@@ -605,21 +603,6 @@ public class Fase2 extends ScreenAdapter {
         }
     }
 
-    private void trocarTela(Screen novaTela) {
-        if (music != null) {
-            music.stop();
-        }
-
-        Gdx.input.setInputProcessor(null);
-
-        Gdx.app.postRunnable(new Runnable() {
-            @Override
-            public void run() {
-                jogo.setScreen(novaTela);
-            }
-        });
-    }
-
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
@@ -665,6 +648,7 @@ public class Fase2 extends ScreenAdapter {
         if (music != null) music.dispose();
         if (font != null) font.dispose();
         if (pauseFont != null) pauseFont.dispose();
+        if (gerenciadorInput != null) gerenciadorInput.dispose();
     }
 
     private static class Fase2PowerUp extends PowerUp {
