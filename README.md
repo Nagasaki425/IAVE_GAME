@@ -1,18 +1,18 @@
 Markdown
-# 🌌 Space Ship-Meteors Game (LibGDX)
+# ♻️ SWEEPER SYSTEM (LibGDX)
 
-Este é um jogo digital 2D de nave espacial desenvolvido em **Java** utilizando o framework **LibGDX**. O projeto foi construído como parte do currículo acadêmico da **Universidade Presbiteriana Mackenzie**, aplicando conceitos avançados de Programação Orientada a Objetos (POO), gerência de estados, detecção de colisões e integração customizada de periféricos (mecanismo de input baseado em um skate adaptado).
+Este é um jogo digital 2D de uma cidade poluída desenvolvido em **Java** utilizando o framework **LibGDX**. O projeto foi construído como parte do currículo acadêmico da **Universidade Presbiteriana Mackenzie**, aplicando conceitos avançados de Programação Orientada a Objetos (POO), gerência de estados, detecção de colisões e integração customizada de periféricos (mecanismo de input baseado em um skate adaptado).
 
 ---
 
 ## 🚀 Funcionalidades do Jogo
 
-* **Mecânica Core:** Controle uma nave espacial desviando de meteoros (obstáculos) e coletando itens espaciais para pontuar.
+* **Mecânica Core:** Controle um caminhão de coleta de lixo desviando de placas e cones (obstáculos) e coletando "lixos" (coletavéis) para pontuar.
 * **Power-ups:**
     * ❤️ **Coração/Drop:** Recupera um ponto de vida (máximo de 3).
     * 🛡️ **Escudo (Shield):** Concede invencibilidade temporária com efeito visual pulsante.
-* **Parallax Scrolling:** Fundo infinito simulando o movimento da nave pelo espaço profundo.
-* **Sistema de Estados (FSM):** Telas de Menu Principal, Gameplay (Fase 1) com sistema de Pausa integrado, e Tela Final (com estatísticas de tempo e pontuação).
+* **Parallax Scrolling:** Fundo infinito simulando o movimento do caminhão pelas ruas sujas.
+* **Sistema de Estados (FSM):** Telas de Menu Principal, Gameplay (Fase 1, 2 e 3) com sistema de Pausa integrado, e Tela Final (com estatísticas de tempo e pontuação).
 * **Suporte Dual-Input:** Modos de controle intercambiáveis entre teclado convencional e um controle de skate físico customizado.
 
 ---
@@ -29,7 +29,7 @@ O projeto segue à risca os padrões de desenvolvimento exigidos em Engenharia d
 
 ## 🕹️ Modos de Controle (Skateboard Input)
 
-O jogo possui uma classe inovadora chamada `SkateboardInput` que permite mapear os movimentos com base em um skate físico adaptado com eixos de controle digitais.
+O jogo possui uma classe chamada `SkateboardInput` que permite mapear os movimentos com base em um skate físico adaptado com eixos de controle digitais.
 
 * **`MODO_SIMULACAO = true` (Padrão):** O jogo roda simulando o skate através do teclado tradicional (**A** para Esquerda, **D** para Direita).
 * **`MODO_SIMULACAO = false`:** O framework passa a varrer as portas USB via `Controllers` do LibGDX para detectar o hardware do skate, mapeando a zona morta (`ZONA_MORTA = 0.3f`) e os eixos horizontais nativos.
